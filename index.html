@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pizza Delivery — Buyurtma</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; background: #f8f9fa; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .services { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        .service-item { border: 1px solid #ddd; padding: 12px; border-radius: 8px; background: #fffdf9; }
+        .price { font-weight: bold; color: #e65100; margin-top: 6px; }
+        input, select, button { width: 100%; padding: 10px; margin: 8px 0; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
+        button { background: #e65100; color: white; border: none; font-weight: bold; cursor: pointer; }
+        button:hover { background: #bf360c; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { text-align: left; padding: 8px; border-bottom: 1px solid #eee; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>🍕 Bizning Xizmatlar (Menyu)</h2>
+        <div id="services-list" class="services">Yuklanmoqda...</div>
+    </div>
+
+    <div class="card">
+        <h2>📝 Ariza qoldirish</h2>
+        <form id="order-form">
+            <input type="text" id="name" placeholder="Ismingiz" required>
+            <input type="text" id="phone" placeholder="Telefon (+998...)" required>
+            <select id="service-select" required></select>
+            <input type="number" id="quantity" value="1" min="1" placeholder="Soni" required>
+            <button type="submit">Buyurtma berish</button>
+        </form>
+        <p id="status-msg" style="color: green; font-weight: bold;"></p>
+    </div>
+
+    <div class="card">
+        <h2>📋 Barcha Arizalar (Bazadan)</h2>
+        <table>
+            <thead>
+                <tr><th>ID</th><th>Ism</th><th>Xizmat</th><th>Soni</th><th>Holati</th><th>Vaqt</th></tr>
+            </thead>
+            <tbody id="orders-table"></tbody>
+        </table>
+    </div>
+
+    <script>
+        async function loadData() {
+            // 1. Load Services
+            const resServices = await fetch('/api/services');
+            const services = await resServices.json();
+            
+            const servicesDiv = document.getElementById('services-list');
+            const select = document.getElementById('service-select');
+            servicesDiv.innerHTML = '';
+            select.innerHTML = '';
+
+            services.forEach(s => {
+                servicesDiv.innerHTML += `
+                    <div class="service-item">
+                        <div><strong>${s.title}</strong></div>
+                        <div class="price">${s.price.toLocaleString()} so'm</div>
+                    </div>`;
+                select.innerHTML += `<option value="${s.title}">${s.title} (${s.price.toLocaleString()} so'm)</option>`;
+            });
+
+            // 2. Load Orders
+            const resOrders = await fetch('/api/orders');
+            const orders = await resOrders.json();
+            const tbody = document.getElementById('orders-table');
+            tbody.innerHTML = '';
+
+            orders.forEach(o => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>#${o.id}</td>
+                        <td>${o.name} <br><small>${o.phone}</small></td>
+                        <td>${o.service}</td>
+                        <td>${o.quantity} ta</td>
+                        <td>${o.status}</td>
+                        <td><small>${o.created_at}</small></td>
+                    </tr>`;
+            });
+        }
+
+        document.getElementById('order-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                name: document.getElementById('name').value,
+                phone: document.getElementById('phone').value,
+                service: document.getElementById('service-select').value,
+                quantity: parseInt(document.getElementById('quantity').value)
+            };
+
+            const res = await fetch('/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                document.getElementById('status-msg').innerText = "✅ Ariza bazaga saqlandi!";
+                document.getElementById('order-form').reset();
+                loadData();
+            }
+        });
+
+        loadData();
+    </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+если ты на iPad ---исползывай команды ниже для скачивание программы --- 
+pip install -r requirements.txt
+
+если ты работаешь в ноуте ------- исползывай команды ниже для скачивание программы.
+python3 -m pip install uvicorn fastapi
+python3 -m pip install sqlalchemy
+
+
+чтобы запустить сайт тебе нужен команды ниже.
+
+
+python3 -m uvicorn potato:app --reload
+
